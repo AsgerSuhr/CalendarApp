@@ -54,3 +54,4 @@ dkms.conf
 build/
 
 secrets.py
+secrets.h

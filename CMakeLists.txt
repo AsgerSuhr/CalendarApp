@@ -45,6 +45,7 @@ target_include_directories(CalendarApp PRIVATE
 
 # Add any user requested libraries
 target_link_libraries(CalendarApp
+          pico_cyw43_arch_lwip_threadsafe_background
         )
 
 pico_add_extra_outputs(CalendarApp)
