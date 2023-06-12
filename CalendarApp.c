@@ -22,6 +22,7 @@
 #include "Debug.h"
 #include <stdlib.h>
 #include "EPD_7in5_V2.h"
+#include "HTTP_pico.h"
 
 #include "secrets.h"
 
@@ -58,7 +59,7 @@ static void ntp_result(NTP_T* state, int status, time_t *result) {
             .year = (int16_t) (utc->tm_year + 1900),
             .month = (int8_t) (utc->tm_mon + 1),
             .day = (int8_t) utc->tm_mday,
-            .hour = (int8_t) utc->tm_hour,
+            .hour = (int8_t) utc->tm_hour + TIME_DIFF,
             .min = (int8_t) utc->tm_min,
             .sec = (int8_t) utc->tm_sec,
             .dotw = (int8_t) utc->tm_wday,
@@ -184,76 +185,6 @@ void run_ntp_test(void) {
     free(state);
 }
 
-
-int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth, 
-    const char *hostname, ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
-    // setup wifi connection
-{
-    if (cyw43_arch_init_with_country(country))
-    {
-        return 1;
-    }
-
-    cyw43_arch_enable_sta_mode();
-    if (hostname != NULL)
-    {
-        netif_set_hostname(netif_default, hostname);
-    }
-
-    if (cyw43_arch_wifi_connect_async(ssid, pass, auth))
-    {
-        return 2;
-    }
-
-    int flashrate = 1000;
-    int status = CYW43_LINK_UP + 1;
-    while (status >= 0 && status != CYW43_LINK_UP)
-    {
-        int new_status = cyw43_tcpip_link_status(
-             &cyw43_state,CYW43_ITF_STA);
-        if (new_status != status)
-        {
-            status = new_status;
-            flashrate = flashrate / (status + 1);
-            printf("connect status: %d %d\n", 
-                                    status, flashrate);
-        }
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-        sleep_ms(flashrate);
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-        sleep_ms(flashrate);
-    }
-    if (status < 0)
-    {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-    }
-    else
-    {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-        if (ip != NULL)
-        {
-            netif_set_ipaddr(netif_default, ip);
-        }
-        if (mask != NULL)
-        {
-            netif_set_netmask(netif_default, mask);
-        }
-        if (gw != NULL)
-        {
-            netif_set_gw(netif_default, gw);
-        }
-        printf("IP: %s\n",
-        ip4addr_ntoa(netif_ip_addr4(netif_default)));
-        printf("Mask: %s\n", 
-        ip4addr_ntoa(netif_ip_netmask4(netif_default)));
-        printf("Gateway: %s\n",
-        ip4addr_ntoa(netif_ip_gw4(netif_default)));
-        printf("Host Name: %s\n",
-        netif_get_hostname(netif_default));
-    }
-    return status;
-}
-
 void fetch_ntp_time() 
 {
     NTP_T *state = ntp_init();
@@ -282,27 +213,30 @@ void fetch_ntp_time()
 }
 
 int main() {
+
+    // Initialixing modules
     stdio_init_all();
     rtc_init();
-
     if(DEV_Module_Init()!=0){
         return -1;
     }
 
-
+    // preparing data
     char datetime_buf[256];
     char *datetime_str = &datetime_buf[0];
     char events_filter[128];
     datetime_t t;
-
     char calendar_id[] = "calendar.calendar";
     char local_calendar_url[] = "http://homeassistant.local:8123/api/calendars";
 
+    // connecting to the internet
     setup(COUNTRY, SSID, PASSWORD, AUTH, "picoCalendar", NULL, NULL, NULL);
-    fetch_ntp_time();
 
+    // Fetch date and time from NTP server and update the Real Time Clock
+    fetch_ntp_time();
     sleep_ms(2000);
 
+    // Fetch the time from the Real Time Clock
     rtc_get_datetime(&t);
     datetime_to_str(datetime_str, sizeof(datetime_buf), &t);
     snprintf(events_filter, sizeof(events_filter), 
@@ -311,6 +245,25 @@ int main() {
         t.year, t.month, t.day+1, t.hour + TIME_DIFF, t.min, t.sec);
     printf("\r%s      %s      ", datetime_str, events_filter);
 
+    // Fetch data from a website
+    uint16_t port = 80;
+    httpc_connection_t settings;
+    settings.result_fn = result;
+    settings.headers_done_fn = headers;
+
+    err_t err = httpc_get_file_dns(
+            "example.com",
+            80,
+            "/index.html",
+            &settings,
+            body,
+            NULL,
+            NULL
+        ); 
+
+    printf("status %d \n", err);
+    while (true) sleep_ms(500);
+    sleep_ms(2000);
 
     // print to E-Paper screen
     printf("e-Paper Init and Clear...\r\n");

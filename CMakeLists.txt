@@ -25,7 +25,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(CalendarApp CalendarApp.c ImageData.c)
+add_executable(CalendarApp CalendarApp.c ImageData.c HTTP_pico.c)
 
 pico_set_program_name(CalendarApp "CalendarApp")
 pico_set_program_version(CalendarApp "0.1")
