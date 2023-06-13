@@ -224,7 +224,8 @@ int main() {
     char events_filter[128];
     datetime_t t;
     char calendar_id[] = "calendar.calendar";
-    char local_calendar_url[] = "http://homeassistant.local:8123/api/calendars";
+    char local_HA_url[] = "http://homeassistant.local:8123";
+    char local_calendar_url[] = "/api/calendars";
 
     // connecting to the internet
     setup(COUNTRY, SSID, PASSWORD, AUTH, "picoCalendar", NULL, NULL, NULL);
@@ -242,24 +243,36 @@ int main() {
         t.year, t.month, t.day+1, t.hour + TIME_DIFF, t.min, t.sec);
     printf("\r%s      %s      ", datetime_str, events_filter);
 
-    // Fetch data from a website
-    uint16_t port = 80;
+    ip_addr_t ip;
+    IP4_ADDR(&ip, 192, 168, 1, 118);   
     httpc_connection_t settings;
     settings.result_fn = result;
     settings.headers_done_fn = headers;
-
-    err_t err = httpc_get_file_dns(
-            "example.com",
-            80,
-            "/index.html",
+    err_t err = httpc_get_file_HA_IP(
+            &ip,
+            8123,
+            local_calendar_url,
+            ACCESS_TOKEN,
             &settings,
             body,
             NULL,
-            NULL
-        ); 
+            NULL); 
 
     printf("status %d \n", err);
     sleep_ms(2000);
+
+    // err_t err = httpc_get_file_dns(
+    //         "example.com",
+    //         80,
+    //         "/index.html",
+    //         &settings,
+    //         body,
+    //         NULL,
+    //         NULL
+    //     ); 
+
+    sleep_ms(2000);
+    while (true) sleep_ms(500);
 
     if(DEV_Module_Init()!=0){
         return -1;
