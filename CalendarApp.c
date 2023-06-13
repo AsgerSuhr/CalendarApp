@@ -217,9 +217,6 @@ int main() {
     // Initialixing modules
     stdio_init_all();
     rtc_init();
-    if(DEV_Module_Init()!=0){
-        return -1;
-    }
 
     // preparing data
     char datetime_buf[256];
@@ -262,8 +259,11 @@ int main() {
         ); 
 
     printf("status %d \n", err);
-    while (true) sleep_ms(500);
     sleep_ms(2000);
+
+    if(DEV_Module_Init()!=0){
+        return -1;
+    }
 
     // print to E-Paper screen
     printf("e-Paper Init and Clear...\r\n");
