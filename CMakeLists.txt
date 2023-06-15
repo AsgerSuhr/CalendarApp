@@ -25,7 +25,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(CalendarApp CalendarApp.c ImageData.c HTTP_pico.c)
+add_executable(CalendarApp CalendarApp.c ImageData.c)
 
 pico_set_program_name(CalendarApp "CalendarApp")
 pico_set_program_version(CalendarApp "0.1")
@@ -43,24 +43,19 @@ target_include_directories(CalendarApp PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
 )
 
-# add_definitions(
-# -DSNTP_SERVER_DNS=1
-# -DSNTP_SERVER_ADDRESS="pool.ntp.org"
-# -DSNTP_SET_SYSTEM_TIME_NTP=set_system_time
-# -DSNTP_STARTUP_DELAY=0
-# )
-
 # add a compilation subdirectory
 add_subdirectory(lib/Config)
 add_subdirectory(lib/e-Paper)
 add_subdirectory(lib/Fonts)
 add_subdirectory(lib/GUI)
+add_subdirectory(lib/HTTP)
 
 # add a header directory
 include_directories(lib/Config)
 include_directories(lib/GUI)
 include_directories(lib/e-Paper)
-# include_directories(lib/Fonts)
+include_directories(lib/Fonts)
+include_directories(lib/HTTP)
 
 # Add any user requested libraries
 target_link_libraries(CalendarApp 
@@ -74,6 +69,7 @@ target_link_libraries(CalendarApp
           Config 
           pico_stdlib
           hardware_spi
+          HTTP_pico
         )
 
 pico_add_extra_outputs(CalendarApp)

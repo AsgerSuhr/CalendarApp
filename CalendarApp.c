@@ -44,6 +44,7 @@ typedef struct NTP_T_ {
 #define AUTH CYW43_AUTH_WPA2_MIXED_PSK
 #define TIME_DIFF 2
 
+
 // Called with results of operation
 static void ntp_result(NTP_T* state, int status, time_t *result) {
     if (status == 0 && result) {
@@ -260,7 +261,6 @@ int main() {
 
     printf("status %d \n", err);
     sleep_ms(2000);
-
     // err_t err = httpc_get_file_dns(
     //         "example.com",
     //         80,
@@ -272,7 +272,32 @@ int main() {
     //     ); 
 
     sleep_ms(2000);
-    while (true) sleep_ms(500);
+    while (local_httpc_result != 0) 
+    {
+        if (local_httpc_result >= 1)
+        {
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+            sleep_ms(1000);
+            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+            sleep_ms(1000);
+            err = httpc_get_file_HA_IP(
+                    &ip,
+                    8123,
+                    local_calendar_url,
+                    ACCESS_TOKEN,
+                    &settings,
+                    body,
+                    NULL,
+                    NULL); 
+
+            printf("status %d \n", err);
+            local_httpc_result = -1;
+            sleep_ms(2000);
+        } else 
+        {
+            sleep_ms(500);
+        }
+    }
 
     if(DEV_Module_Init()!=0){
         return -1;

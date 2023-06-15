@@ -6,6 +6,7 @@
 #include "HTTP_pico.h"
 
 char myBuff[2500];
+int8_t local_httpc_result = -1;
 
 void result(void *arg, httpc_result_t httpc_result,
             u32_t rx_content_len, u32_t srv_res, err_t err)
@@ -14,6 +15,7 @@ void result(void *arg, httpc_result_t httpc_result,
     printf("transfer complete\n");
     printf("local result=%d\n", httpc_result);
     printf("http result=%d\n", srv_res);
+    local_httpc_result = httpc_result;
 }
 
 err_t headers(httpc_state_t *connection, void *arg,
