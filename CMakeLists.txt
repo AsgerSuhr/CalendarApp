@@ -49,6 +49,7 @@ add_subdirectory(lib/e-Paper)
 add_subdirectory(lib/Fonts)
 add_subdirectory(lib/GUI)
 add_subdirectory(lib/HTTP)
+add_subdirectory(lib/NTP)
 
 # add a header directory
 include_directories(lib/Config)
@@ -56,6 +57,7 @@ include_directories(lib/GUI)
 include_directories(lib/e-Paper)
 include_directories(lib/Fonts)
 include_directories(lib/HTTP)
+include_directories(lib/NTP)
 
 # Add any user requested libraries
 target_link_libraries(CalendarApp 
@@ -70,6 +72,7 @@ target_link_libraries(CalendarApp
           pico_stdlib
           hardware_spi
           HTTP_pico
+          NTP_pico
         )
 
 pico_add_extra_outputs(CalendarApp)

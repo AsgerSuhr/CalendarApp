@@ -6,6 +6,8 @@
 extern char myBuff[];
 extern int8_t local_httpc_result;
 
+void clearBuffer();
+
 void result(void *arg, httpc_result_t httpc_result,
         u32_t rx_content_len, u32_t srv_res, err_t err);
         

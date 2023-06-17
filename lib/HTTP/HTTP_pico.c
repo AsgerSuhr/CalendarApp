@@ -5,8 +5,13 @@
 // #include "secrets.h"
 #include "HTTP_pico.h"
 
-char myBuff[2500];
+char myBuff[1000];
 int8_t local_httpc_result = -1;
+
+void clearBuffer()
+{
+    memset(myBuff, 0, sizeof(myBuff));
+}
 
 void result(void *arg, httpc_result_t httpc_result,
             u32_t rx_content_len, u32_t srv_res, err_t err)
@@ -27,6 +32,7 @@ err_t headers(httpc_state_t *connection, void *arg,
     pbuf_copy_partial(hdr, myBuff, hdr->tot_len, 0);
     printf("headers \n");
     printf("%s", myBuff);
+    clearBuffer();
     return ERR_OK;
 }
 
