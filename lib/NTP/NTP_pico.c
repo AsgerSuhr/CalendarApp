@@ -1,6 +1,5 @@
 #include "NTP_pico.h"
 
-
 // Called with results of operation
 static void ntp_result(NTP_T* state, int status, time_t *result) {
     if (status == 0 && result) {

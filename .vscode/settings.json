@@ -17,6 +17,7 @@
       "ctime": "cpp",
       "debug.h": "c",
       "epd_7in5_v2.h": "c",
-      "http_pico.h": "c"
+      "http_pico.h": "c",
+      "array": "c"
     },
 }
