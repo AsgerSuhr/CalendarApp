@@ -5,7 +5,7 @@
 // #include "secrets.h"
 #include "HTTP_pico.h"
 
-char myBuff[1000];
+char myBuff[2500];
 int8_t local_httpc_result = -1;
 
 void clearBuffer()
