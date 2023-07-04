@@ -2,9 +2,21 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "lwip/apps/http_client.h"
+#include "CalendarApp.h"
+#include "json_utils.h"
+#define JSMN_HEADER
+#include "jsmn.h"
+
+#define MAX_PACKET_SIZE 4096
+#ifndef MAX_CALENDAR_AMOUNT
+        #define MAX_CALENDAR_AMOUNT 10
+#endif // MAX_CALENDAR_AMOUNT
 
 extern char myBuff[];
-extern int8_t local_httpc_result;
+extern char packet_buf[];
+extern int packet_pos;
+
+void init_calendar(Calendar *calendar);
 
 void clearBuffer();
 
@@ -16,6 +28,14 @@ err_t headers(httpc_state_t *connection, void *arg,
 
 err_t body(void *arg, struct altcp_pcb *conn, 
         struct pbuf *p, err_t err);
+
+int process_calendars(char *buff, Calendar* calendars);
+
+err_t calendars_received(void *arg, struct altcp_pcb *conn,
+           struct pbuf *p, err_t err);
+
+err_t calendar_events_received(void *arg, struct altcp_pcb *conn,
+           struct pbuf *p, err_t err);
 
 int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth, 
         const char *hostname, ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw);
