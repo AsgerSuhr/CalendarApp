@@ -124,49 +124,6 @@ char **split(char *string, char *separators, int *count, int buffer_size)
 }
 
 
-
-/**
- * @brief unfinished function, dont use!
- * 
- * @param str 
- * @param delimiter 
- * @param max_items 
- * @param max_values 
- * @param items 
- * @return int 0 if succesfull
- */
-int split_string(char* str, const char delimiter, int8_t* max_items, int8_t* max_values, 
-                char items[*max_items][*max_values]) {
-    // removing the first character, in this case => {
-    str = str+1;
-
-    // and removing the last character, in this case => }
-    size_t length = strlen(str);
-    if (length > 0) {
-        str[length-1] = '\0';
-    }
-
-    char* token = strchr(str, delimiter);
-    int8_t count = 0; 
-    while (token != NULL) {
-        int len = token - str;
-        if (len < *max_values && count < *max_items) {
-            strncpy(items[0], str, len);
-            items[0][len] = '\0';
-            count++;
-        }
-        str = token + 1;
-        token = strchr(str, delimiter);
-    }
-
-    strncpy(items[1], str, strlen(str));
-    items[1][strlen(str)] = '\0';
-    // printf("\n%s \n%s", items[0], items[1]);
-    *max_items = count;
-
-    return 0;
-}
-
 /**
  * @brief Parses a string representing a JSON list containging dictionaries.
  * it's very specific so can't be used to parse generic JSON data.

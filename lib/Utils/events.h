@@ -1,0 +1,10 @@
+#include "fonts.h"
+#include "CalendarApp.h"
+#include "pico/stdlib.h"
+#include <string.h>
+#include "datetimes.h"
+#include "DEV_Config.h"
+#include "GUI_Paint.h"
+
+bool event_on_date(Event *event, char *date);
+void print_agenda(datetime_t *date, Calendar *calendars, int *num_calendars);

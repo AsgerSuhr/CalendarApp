@@ -4,6 +4,9 @@
 #include "stdbool.h"
 
 #define MAX_EVENTS 10
+#define DEVICE_NAME "PiCalendar"
+#define DAYS_TO_OFFSET 5
+#define MAX_CALENDAR_AMOUNT 10
 
 typedef struct {
     bool empty;
