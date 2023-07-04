@@ -13,6 +13,7 @@
 #include "jsmn.h"
 #include "CalendarApp.h"
 #include "datetimes.h"
+#include "events.h"
 
 uint32_t country = CYW43_COUNTRY_DENMARK;
 uint32_t auth = CYW43_AUTH_WPA2_MIXED_PSK;
