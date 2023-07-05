@@ -53,8 +53,9 @@ int main()
     settings.result_fn = result;
     settings.headers_done_fn = headers;
     char local_calendar_url[] = "/api/calendars";
+    char local_shopping_list_url[] = "/api/shopping_list";
     err_t err;
-    Calendar calendars[MAX_CALENDAR_AMOUNT];
+    calendar_t calendars[MAX_CALENDAR_AMOUNT];
 
     // Get the different calendars available on HA
     err = httpc_get_file_HA(
@@ -70,7 +71,7 @@ int main()
     printf("status %d \n", err);
     sleep_ms(1000);
 
-    // Fetch each calendars events and store them in a Calendar struct
+    // Fetch each calendars events and store them in a calendar_t struct
     for (int i = 0; i < calendars[0].calendar_count; i++) {
 
         char package[100];
@@ -91,6 +92,8 @@ int main()
             ); 
 
         printf("status %d \n", err);
+
+        sleep_ms(500);
 
     }
 
@@ -114,6 +117,21 @@ int main()
         }
     }
 
+    list_item_t todo_list[MAX_LIST_ITEM_AMOUNT];
+    // Get the different calendars available on HA
+    err = httpc_get_file_HA(
+            "192.168.1.118",
+            8123,
+            local_shopping_list_url,
+            ACCESS_TOKEN,
+            &settings,
+            todo_list_received,
+            todo_list,
+            NULL
+        ); 
+    printf("status %d \n", err);
+    sleep_ms(1000);
+
     if(DEV_Module_Init()!=0){
         return -1;
     }
@@ -135,14 +153,18 @@ int main()
     }
     printf("Paint_NewImage\r\n");
     Paint_NewImage(BlackImage, EPD_7IN5_V2_WIDTH, EPD_7IN5_V2_HEIGHT, 0, WHITE);
-    
+
     //1.Select Image
     printf("SelectImage:BlackImage\r\n");
     Paint_SelectImage(BlackImage);
     Paint_Clear(WHITE);
 
-    // print calendar agenda
+    // Paint_DrawBitMap(cat);
+
+    // paint calendar agenda
     print_agenda(&t, calendars, &calendars[0].calendar_count);
+    Paint_DrawLine(390, 0, 390, MAX_SCREEN_HEIGHT, BLACK, DOT_PIXEL_2X2, LINE_STYLE_DOTTED);
+    print_todo_list(todo_list);
 
     printf("EPD_Display\r\n");
     EPD_7IN5_V2_Display(BlackImage);

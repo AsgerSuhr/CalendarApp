@@ -11,12 +11,15 @@
 #ifndef MAX_CALENDAR_AMOUNT
         #define MAX_CALENDAR_AMOUNT 10
 #endif // MAX_CALENDAR_AMOUNT
+#ifndef MAX_LIST_ITEM_AMOUNT
+        #define MAX_LIST_ITEM_AMOUNT 20
+#endif // MAX_LIST_ITEM_AMOUNT
 
 extern char myBuff[];
 extern char packet_buf[];
 extern int packet_pos;
 
-void init_calendar(Calendar *calendar);
+void init_calendar(calendar_t *calendar);
 
 void clearBuffer();
 
@@ -29,12 +32,19 @@ err_t headers(httpc_state_t *connection, void *arg,
 err_t body(void *arg, struct altcp_pcb *conn, 
         struct pbuf *p, err_t err);
 
-int process_calendars(char *buff, Calendar* calendars);
+int process_calendars(char *buff, calendar_t* calendars);
 
 err_t calendars_received(void *arg, struct altcp_pcb *conn,
            struct pbuf *p, err_t err);
 
+int process_calendar_events(char* buff, calendar_t* calendar);
+
 err_t calendar_events_received(void *arg, struct altcp_pcb *conn,
+           struct pbuf *p, err_t err);
+
+int process_todo_list(char* buff, list_item_t* list_items);
+
+err_t todo_list_received(void *arg, struct altcp_pcb *conn,
            struct pbuf *p, err_t err);
 
 int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth, 

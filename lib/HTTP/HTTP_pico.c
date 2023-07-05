@@ -4,7 +4,7 @@ char myBuff[3000];
 char packet_buf[MAX_PACKET_SIZE];
 int packet_pos = 0;
 
-void init_calendar(Calendar *calendar) {
+void init_calendar(calendar_t *calendar) {
     calendar->empty = true;
 }
 
@@ -56,7 +56,7 @@ err_t body(void *arg, struct altcp_pcb *conn,
     return ERR_OK;
 }
 
-int process_calendars(char *buff, Calendar* calendars) {
+int process_calendars(char *buff, calendar_t* calendars) {
 
     int parse_result;
     jsmntok_t tokens[128];
@@ -120,12 +120,12 @@ int process_calendars(char *buff, Calendar* calendars) {
             if (strcmp(key_string, "name") == 0) {
                 strcpy(calendars[i].name, value_string);
                 calendars[i].name[value.end - value.start] = '\0';
-                printf("Calendar %d name = %s\n", i, calendars[i].name);
+                printf("calendar_t %d name = %s\n", i, calendars[i].name);
             }
             else if (strcmp(key_string, "entity_id") == 0) {
                 strcpy(calendars[i].entity_id, value_string);
                 calendars[i].entity_id[value.end - value.start] = '\0';
-                printf("Calendar %d entity_id = %s\n", i, calendars[i].entity_id);
+                printf("calendar_t %d entity_id = %s\n", i, calendars[i].entity_id);
             }
         }
 
@@ -133,7 +133,6 @@ int process_calendars(char *buff, Calendar* calendars) {
     
     free(calendar_token_pos);
 
-    clearBuffer();
     return 0;
 }
 
@@ -141,7 +140,7 @@ err_t calendars_received(void *arg, struct altcp_pcb *conn,
            struct pbuf *p, err_t err)
 {
 
-    Calendar *calendars = (Calendar *)arg;
+    calendar_t *calendars = (calendar_t *)arg;
 
     if (p != NULL && err == ERR_OK) {
         if (packet_pos + p->tot_len < MAX_PACKET_SIZE) {
@@ -175,7 +174,7 @@ err_t calendars_received(void *arg, struct altcp_pcb *conn,
     return ERR_OK;
 }
 
-int process_calendar_events(char* buff, Calendar* calendar) {
+int process_calendar_events(char* buff, calendar_t* calendar) {
 
     int parse_result;
     jsmntok_t tokens[256];
@@ -236,6 +235,8 @@ int process_calendar_events(char* buff, Calendar* calendar) {
                         for (int split_index = 0; split_index < string_count; split_index++)
                             free(split_string[split_index]);
                         free(split_string);
+                    } else {
+                        strcpy(date_string, time_string);
                     }
 
                     if ( strcmp(key, "start") == 0) {
@@ -277,7 +278,7 @@ int process_calendar_events(char* buff, Calendar* calendar) {
 err_t calendar_events_received(void *arg, struct altcp_pcb *conn,
            struct pbuf *p, err_t err)
 {
-    Calendar *calendar = (Calendar *)arg;
+    calendar_t *calendar = (calendar_t *)arg;
 
     if (p != NULL && err == ERR_OK) {
         if (packet_pos + p->tot_len < MAX_PACKET_SIZE) {
@@ -291,6 +292,127 @@ err_t calendar_events_received(void *arg, struct altcp_pcb *conn,
                 // Process JSON
                 print_wrapped(packet_buf, 150);
                 process_calendar_events(packet_buf, calendar);
+
+                // Reset buffer
+                packet_pos = 0;
+                memset(packet_buf, 0, sizeof(packet_buf));
+            }
+        } else {
+            // Buffer overflow, handle error
+            printf("buffer overflow!");
+            return ERR_BUF;
+        }
+        pbuf_free(p);
+        
+    } else if (p != NULL) {
+        // If an error occurred but we received a packet, free the packet.
+        pbuf_free(p);
+    }
+
+
+    return ERR_OK;
+}
+
+
+int process_todo_list(char* buff, list_item_t* list_items) {
+
+    int parse_result;
+    jsmntok_t tokens[256];
+    jsmn_parser jsmn;
+    jsmn_init(&jsmn);
+    parse_result = jsmn_parse(&jsmn, buff, strlen(buff), tokens, 256);
+    if (parse_result < 0) {
+        printf("Failed to parse JSON: %d\n", parse_result);
+        return 1;
+    }
+
+    int list_item_count = 0;
+    int *list_item_token_pos = NULL;
+    for (int i = 0; i < parse_result; i++) {
+        if (tokens[i].type == JSMN_OBJECT) {
+            list_item_count++;
+        }
+    }
+
+    if (list_item_count > MAX_LIST_ITEM_AMOUNT)
+        list_item_count = MAX_LIST_ITEM_AMOUNT;
+
+    list_item_token_pos = (int*)malloc(list_item_count * sizeof(int));
+
+    if (list_item_token_pos == NULL) {
+        printf("Memory allocation failed. Exiting...\n");
+        return 1;
+    }
+
+    int index = 0;
+
+    for (int i = 0; i < parse_result; i++) {
+        if (tokens[i].type == JSMN_OBJECT) {
+            list_item_token_pos[index] = i;
+            index++;
+        }
+    }
+
+    for (int i = 0; i < list_item_count; i++) {
+        jsmntok_t current_token = tokens[ list_item_token_pos[i] ];
+        int current_string_length = current_token.end - current_token.start;
+        printf("\n%.*s\n", current_string_length, buff + current_token.start);
+
+        list_items[i].total_items = list_item_count;
+
+        for (int pairs = 0; pairs < current_token.size; pairs++) {
+            jsmntok_t key = tokens[ list_item_token_pos[i] + 1 + (pairs*2) ];
+            jsmntok_t value = tokens[ list_item_token_pos[i] + 2 + (pairs*2)];
+            
+            char key_string[20];
+            char value_string[50];
+            strncpy(key_string, buff + key.start, key.end - key.start);
+            strncpy(value_string, buff + value.start, value.end - value.start);
+            key_string[key.end - key.start] = '\0';
+            value_string[value.end - value.start] = '\0';
+
+            // printf("\nkey: %s ", key_string);
+            // printf("value: %s", value_string);
+
+            if (strcmp(key_string, "name") == 0) {
+                strcpy(list_items[i].name, value_string);
+                list_items[i].name[value.end - value.start] = '\0';
+                printf("list item %d name = %s\n", i, list_items[i].name);
+            }
+            else if (strcmp(key_string, "complete") == 0) {
+                if (strcmp(value_string, "true") == 0) {
+                    list_items[i].completed = true;
+                } else {
+                    list_items[i].completed = false;
+                }
+                printf("list item %d entity_id = %s\n", i, value_string);
+            }
+        }
+
+    }
+    
+    free(list_item_token_pos);
+
+    return 0;
+}
+
+err_t todo_list_received(void *arg, struct altcp_pcb *conn,
+           struct pbuf *p, err_t err)
+{
+    list_item_t *list_items = (list_item_t *)arg;
+
+    if (p != NULL && err == ERR_OK) {
+        if (packet_pos + p->tot_len < MAX_PACKET_SIZE) {
+            // Copy data to our buffer
+            pbuf_copy_partial(p, packet_buf + packet_pos, p->tot_len, 0);
+            packet_pos += p->tot_len;
+
+            // If JSON document is complete (for example, it ends with "}" - 
+            // you might need a more sophisticated check for your use case)
+            if (packet_buf[packet_pos - 1] == ']') {
+                // Process JSON
+                print_wrapped(packet_buf, 150);
+                process_todo_list(packet_buf, list_items);
 
                 // Reset buffer
                 packet_pos = 0;

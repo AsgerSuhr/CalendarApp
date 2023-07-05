@@ -2,7 +2,7 @@
 
 
 // Function to check if a date falls within the event's start and end dates
-bool event_on_date(Event *event, char *date) {
+bool event_on_date(event_t *event, char *date) {
     // if start isn't a timestamp (00:00:00) it must be a date 2023-07-01
     // which means its a whole day event
     char *several_day_event = strchr(event->start, ':'); 
@@ -14,13 +14,13 @@ bool event_on_date(Event *event, char *date) {
     }
 }
 
-void print_agenda(datetime_t *date, Calendar *calendars, int *num_calendars) {
+void print_agenda(datetime_t *date, calendar_t *calendars, int *num_calendars) {
     datetime_t current_date = *date;
     char datetime_buf[25];
     char *datetime_str = &datetime_buf[0];
     int Y_location = 0;
     for (int day=0; day < DAYS_TO_OFFSET; day++) {
-        if (Y_location >= 450)
+        if (Y_location >= 400)
             break;
         datetime_to_today(datetime_str, sizeof(datetime_buf), &current_date);
         
@@ -31,7 +31,7 @@ void print_agenda(datetime_t *date, Calendar *calendars, int *num_calendars) {
         bool date_has_events_today = false;
         for (int i=0; i < *num_calendars; i++) {
 
-            Calendar current_calendar = calendars[i];
+            calendar_t current_calendar = calendars[i];
 
             if (!current_calendar.empty) {
 
@@ -42,7 +42,7 @@ void print_agenda(datetime_t *date, Calendar *calendars, int *num_calendars) {
                             date_has_events_today = true;
                             printf("Events on %s\n", datetime_str);
                             Paint_DrawString_EN(10, Y_location, datetime_str, &Font24, WHITE, BLACK);
-                            Paint_DrawLine(5, Y_location+20, 400, Y_location+20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+                            Paint_DrawLine(5, Y_location+20, 375, Y_location+20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
                             Paint_DrawLine(10, Y_location+15, 10, Y_location+50, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
                             Y_location += 30;
                         }
@@ -90,4 +90,41 @@ void print_agenda(datetime_t *date, Calendar *calendars, int *num_calendars) {
         
         offset_datetime(&current_date, 1);
     }
+}
+
+
+void print_todo_list(list_item_t* list_items) {
+    int total_list_items = list_items[0].total_items;
+    int Y = 0;
+    int X =400;
+
+    Paint_DrawString_EN(X, 0, "To-Do List", &Font24, WHITE, BLACK);
+    Paint_DrawLine(X-5, 20, X+250, 20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    // Paint_DrawLine(X, 15, X, 50, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    Y += 30;
+    X += 15;
+    int font16_pixel_w = 11;
+    
+    for (int i = 0; i < total_list_items; i++) {
+        list_item_t current_item = list_items[i];
+        int cross_line_len = (strlen(current_item.name)*font16_pixel_w)+5;
+        int wrapped = cross_line_len / 375;
+
+        if (!current_item.completed) {
+            Paint_DrawPoint(X-5, Y + 5, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
+            Paint_DrawString_EN(X, Y, current_item.name, &Font16, WHITE, BLACK);
+        } else {
+            Paint_DrawPoint(X-5, Y+5, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
+            Paint_DrawString_EN(X, Y, current_item.name, &Font16, WHITE, BLACK);
+            Paint_DrawLine(X-5, Y+5, X+cross_line_len, Y+5, BLACK, DOT_PIXEL_2X2, LINE_STYLE_SOLID);
+        }
+
+        for (int i = 0; i < wrapped; i++)
+            Y += 20;
+
+        Y += 20;
+    }
+
+    Paint_DrawLine(X-25, Y, X + (MAX_SCREEN_WIDTH-X), Y, BLACK, DOT_PIXEL_2X2, LINE_STYLE_DOTTED);
+
 }

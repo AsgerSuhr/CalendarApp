@@ -32,7 +32,8 @@
 #ifndef _IMAGEDATA_H_
 #define _IMAGEDATA_H_
 
-extern const unsigned char calendar[];
+extern const unsigned char image[];
+extern const unsigned char cat[];
 
 #endif
 /* FILE END */
