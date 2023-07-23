@@ -29,4 +29,5 @@ include_directories(../Fonts)
 target_link_libraries(utils 
                     pico_stdlib
                     hardware_spi
+                    hardware_sleep
                     Fonts)

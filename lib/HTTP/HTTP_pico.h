@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/watchdog.h"
 #include "pico/cyw43_arch.h"
 #include "lwip/apps/http_client.h"
 #include "CalendarApp.h"

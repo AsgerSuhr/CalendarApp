@@ -59,8 +59,8 @@ void print_agenda(datetime_t *date, calendar_t *calendars, int *num_calendars) {
                         printf("\t\tLocation: %s\n", current_calendar.events[j].location);
                         char *several_day_event = strchr(current_calendar.events[j].start, ':');
                         char to_write[100];
-                        char start[11];
-                        char end[11];
+                        char start[12];
+                        char end[12];
                         if (several_day_event != NULL) {
                             strcpy(end, current_calendar.events[j].end);
                             end[5] = '\0';
@@ -98,8 +98,15 @@ void print_todo_list(list_item_t* list_items) {
     int Y = 0;
     int X =400;
 
+    datetime_t t;
+    rtc_get_datetime(&t);
+    char time_buf[75];
+    snprintf(time_buf, sizeof(time_buf), "%s %02d:%02d",
+            DATETIME_DOWS[t.dotw], t.hour, t.min, t.sec);
+
     Paint_DrawString_EN(X, 0, "To-Do List", &Font24, WHITE, BLACK);
-    Paint_DrawLine(X-5, 20, X+250, 20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    Paint_DrawString_EN(MAX_SCREEN_WIDTH-100, 0, time_buf, &Font12, BLACK, WHITE);
+    Paint_DrawLine(X-5, 20, X+200, 20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
     // Paint_DrawLine(X, 15, X, 50, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
     Y += 30;
     X += 15;

@@ -8,8 +8,12 @@
 #define DAYS_TO_OFFSET 5
 #define MAX_CALENDAR_AMOUNT 10
 #define MAX_LIST_ITEM_AMOUNT 20
-#define MAX_SCREEN_WIDTH 785
+#define MAX_SCREEN_WIDTH 800 //785
 #define MAX_SCREEN_HEIGHT 475
+
+void feed_wdt();
+void stop_custom_wdt();
+void start_custom_wdt();
 
 typedef struct {
     char name[256];

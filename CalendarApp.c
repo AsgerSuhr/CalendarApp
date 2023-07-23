@@ -4,8 +4,11 @@
 #include "Debug.h"
 #include <stdlib.h>
 #include "EPD_7in5_V2.h"
+#include "hardware/watchdog.h"
+#include "pico/multicore.h"
 
 #include "HTTP_pico.h"
+#include "HTTP_client.h"
 #include "NTP_pico.h"
 #include "secrets.h"
 #include "json_utils.h"
@@ -15,23 +18,64 @@
 #include "datetimes.h"
 #include "events.h"
 
+#define REFRESH_INTERVAL_MINUTES 60
 uint32_t country = CYW43_COUNTRY_DENMARK;
 uint32_t auth = CYW43_AUTH_WPA2_MIXED_PSK;
+
+#define TIMEOUT_MS 6000
+
+volatile bool ping_received = false;
+
+// This runs on Core 1 and acts as our watchdog
+void core1_entry() {
+    uint32_t last_ping_time = to_ms_since_boot(get_absolute_time());
+
+    while (1) {
+
+        if (ping_received) {
+            ping_received = false; // Reset the flag
+            last_ping_time = to_ms_since_boot(get_absolute_time());
+        } else if (to_ms_since_boot(get_absolute_time()) - last_ping_time > TIMEOUT_MS) {
+            // Timeout has occurred, reset the system
+            watchdog_reboot(0, 0, 1);
+        }
+
+        sleep_ms(100); // Sleep for a bit before checking again, to save power
+    }
+}
+
+void feed_wdt() {
+    ping_received = true;
+}
+
+void stop_custom_wdt() {
+    multicore_reset_core1();
+}
+
+void start_custom_wdt() {
+    multicore_launch_core1(core1_entry);
+}
 
 int main()
 {
     stdio_init_all();
     rtc_init();
+    // watchdog_enable(6000, 1);
+    
+    // Launch the "watchdog" task on Core 1
+    start_custom_wdt();
 
     // first connect to the internet
     setup(country, SSID, PASSWORD, auth, DEVICE_NAME, NULL, NULL, NULL);
     
     // fetch date and time from NTP server, it will also set the RTC on the Pico 
     sleep_ms(500);
+    feed_wdt();
     fetch_ntp_time();
     sleep_ms(500);
 
     clearBuffer();
+    feed_wdt();
 
     // Fetch the time from the Real Time Clock
     char datetime_buf[25];
@@ -69,6 +113,7 @@ int main()
             NULL
         ); 
     printf("status %d \n", err);
+    feed_wdt();
     sleep_ms(1000);
 
     // Fetch each calendars events and store them in a calendar_t struct
@@ -92,12 +137,14 @@ int main()
             ); 
 
         printf("status %d \n", err);
-
+        feed_wdt();
         sleep_ms(500);
 
     }
 
+    feed_wdt();
     sleep_ms(1000);
+    feed_wdt();
 
 
     // Print sorted JSON data
@@ -117,6 +164,8 @@ int main()
         }
     }
 
+    feed_wdt();
+
     list_item_t todo_list[MAX_LIST_ITEM_AMOUNT];
     // Get the different calendars available on HA
     err = httpc_get_file_HA(
@@ -131,17 +180,21 @@ int main()
         ); 
     printf("status %d \n", err);
     sleep_ms(1000);
+    feed_wdt();
 
     if(DEV_Module_Init()!=0){
         return -1;
     }
 
     // print to E-Paper screen
+    feed_wdt();
     printf("e-Paper Init and Clear...\r\n");
     EPD_7IN5_V2_Init();
+    feed_wdt();
 
     EPD_7IN5_V2_Clear();
     DEV_Delay_ms(500);
+    feed_wdt();
 
     //Create a new image cache
     UBYTE *BlackImage;
@@ -168,19 +221,26 @@ int main()
 
     printf("EPD_Display\r\n");
     EPD_7IN5_V2_Display(BlackImage);
+    feed_wdt();
     DEV_Delay_ms(2000);
+    feed_wdt();
 
     printf("Goto Sleep...\r\n");
     EPD_7IN5_V2_Sleep();
     free(BlackImage);
     BlackImage = NULL;
     DEV_Delay_ms(2000);//important, at least 2s
+    feed_wdt();
 
     // close 5V
     printf("close 5V, Module enters 0 power consumption ...\r\n");
     DEV_Module_Exit();
 
     cyw43_arch_deinit();
+
+    feed_wdt();
+    rtc_sleep(REFRESH_INTERVAL_MINUTES);
+
     while (true){
         sleep_ms(500);
     }

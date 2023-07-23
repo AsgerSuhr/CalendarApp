@@ -451,6 +451,7 @@ err_t calendar_body(void *arg, struct altcp_pcb *conn,
 int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth,
           const char *hostname, ip_addr_t *ip, ip_addr_t *mask, ip_addr_t *gw)
 {
+    feed_wdt();
     if (cyw43_arch_init_with_country(country))
     {
         return 1;
@@ -471,6 +472,7 @@ int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth,
     int status = CYW43_LINK_UP + 1;
     while (status >= 0 && status != CYW43_LINK_UP)
     {
+        feed_wdt();
         int new_status = cyw43_tcpip_link_status(
             &cyw43_state, CYW43_ITF_STA);
         if (new_status != status)
@@ -482,9 +484,11 @@ int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth,
         }
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
         sleep_ms(flashrate);
+        feed_wdt();
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
         sleep_ms(flashrate);
     }
+
     if (status < 0)
     {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
@@ -513,5 +517,6 @@ int setup(uint32_t country, const char *ssid, const char *pass, uint32_t auth,
         printf("Host Name: %s\n",
                netif_get_hostname(netif_default));
     }
+    feed_wdt();
     return status;
 }
