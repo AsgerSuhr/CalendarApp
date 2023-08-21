@@ -70,11 +70,11 @@ void rtc_sleep(int minutes) {
 void datetime_to_today(char *buf, uint buf_size, const datetime_t *t) {
     snprintf(buf,
              buf_size,
-             "%s %d %s %d",
+             "%s %d %s",
              DATETIME_DOWS[t->dotw],
              t->day,
-             DATETIME_MONTHS[t->month - 1],
-             t->year);
+             DATETIME_MONTHS[t->month - 1]);
+             
 };
 
 bool isLeapYear(int year) {

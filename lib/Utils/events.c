@@ -105,7 +105,7 @@ void print_todo_list(list_item_t* list_items) {
             DATETIME_DOWS[t.dotw], t.hour, t.min, t.sec);
 
     Paint_DrawString_EN(X, 0, "To-Do List", &Font24, WHITE, BLACK);
-    Paint_DrawString_EN(MAX_SCREEN_WIDTH-100, 0, time_buf, &Font12, BLACK, WHITE);
+    Paint_DrawString_EN(MAX_SCREEN_WIDTH-110, 5, time_buf, &Font12, BLACK, WHITE);
     Paint_DrawLine(X-5, 20, X+200, 20, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
     // Paint_DrawLine(X, 15, X, 50, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
     Y += 30;

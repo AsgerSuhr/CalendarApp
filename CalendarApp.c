@@ -22,7 +22,7 @@
 uint32_t country = CYW43_COUNTRY_DENMARK;
 uint32_t auth = CYW43_AUTH_WPA2_MIXED_PSK;
 
-#define TIMEOUT_MS 6000
+#define TIMEOUT_MS 10000
 
 volatile bool ping_received = false;
 
@@ -61,12 +61,13 @@ int main()
     stdio_init_all();
     rtc_init();
     // watchdog_enable(6000, 1);
-    
+
     // Launch the "watchdog" task on Core 1
     start_custom_wdt();
 
     // first connect to the internet
     setup(country, SSID, PASSWORD, auth, DEVICE_NAME, NULL, NULL, NULL);
+    feed_wdt();
     
     // fetch date and time from NTP server, it will also set the RTC on the Pico 
     sleep_ms(500);
@@ -202,6 +203,7 @@ int main()
     UWORD Imagesize = ((EPD_7IN5_V2_WIDTH % 8 == 0)? (EPD_7IN5_V2_WIDTH / 8 ): (EPD_7IN5_V2_WIDTH / 8 + 1)) * EPD_7IN5_V2_HEIGHT;
     if((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
         printf("Failed to apply for black memory...\r\n");
+        watchdog_reboot(0, 0, 1);
         return -1;
     }
     printf("Paint_NewImage\r\n");
